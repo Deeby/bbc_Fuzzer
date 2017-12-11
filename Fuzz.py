@@ -30,7 +30,7 @@ class FuzzManager:
 
         self.loop = self.databaseManager.get_loop()
         self.test_number = self.databaseManager.get_test_number()
-        self.mutate_mode = self.databaseManager.get_test_mode() # windows binary or docker container
+        self.mutate_mode = self.databaseManager.get_mutate_mode() # windows binary or docker container
 
         self.pid = None
         self.debug = None

@@ -1,11 +1,11 @@
 from fuzz import FuzzManager
 from communication import CommunicationManager
-from threading
+import threading
 
 
 class Secretary:
     def __init__(self):
-        self.fuzzManaser = FuzzManager()
+        self.fuzzManager = FuzzManager()
         self.communicationManager = CommunicationManager()
         self.team =[self.fuzzManager, self.communicationManager]
 

@@ -11,7 +11,7 @@ from hashlib import sha224
 class CommunicationManager:
     def __init__(self):
         self.databaseManager = DatabaseManager()
-        self.chat_id = int(self.databaseManager.get_master_chat_id())
+        self.chat_id = self.databaseManager.get_master_chat_id()
         self.text = None
         self.api_code = self.databaseManager.get_api_code()
         self.manager = telegram.Bot(self.api_code)
