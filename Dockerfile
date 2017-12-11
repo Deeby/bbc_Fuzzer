@@ -20,8 +20,8 @@ RUN make \
 
 WORKDIR /
 
-RUN mkdir sample && mkdir testcase
+RUN mkdir seed && mkdir testcase
 
-VOLUME ["/sample", "/testcase"]
+VOLUME ["/seed", "/testcase"]
 
-CMD /usr/bin/radamsa -r /sample -n inf -o /testcase/%n
+CMD /usr/bin/radamsa -r /seed -n inf -o /testcase/%n
