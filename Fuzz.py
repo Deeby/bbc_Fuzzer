@@ -63,7 +63,9 @@ class FuzzManager:
 	    self.dump() 
 	else: 
 	    print "No Exception Occurred"
-	    self.debug.stop()
+	
+	self.event.get_process().kill()
+	self.debug.stop()
 
     def dump(self):
 	try:
@@ -82,7 +84,6 @@ class FuzzManager:
             self.save_report(crash_type, report)
 
 	    print "Exception Occurred"
-	    self.event.get_process().kill()
 	except:
 	    pass
 
