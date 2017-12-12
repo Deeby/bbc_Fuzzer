@@ -33,6 +33,10 @@ class CommunicationManager:
    
     def update_task(self):
         self.tasks = self.manager.get_updates(offset=self.completed, timeout=10)
+    
+    def alert(self, alert_text):
+        self.text = alert_text
+        send_message_()
 
     def send_message_(self):
         self.manager.send_message(self.chat_id, self.text)
