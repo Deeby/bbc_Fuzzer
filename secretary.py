@@ -1,6 +1,6 @@
 from fuzz import FuzzManager
 from communication import CommunicationManager
-from multiprocessing import Pool
+import threading
 
 
 class Secretary:
@@ -9,8 +9,9 @@ class Secretary:
         self.communicationManager = CommunicationManager()
 
     def work_start(self):
-        pool = Pool(processes=1)
-        pool.map(self.communicationManager.start, '')
+        communicationManager_thread = threading.Thread(target=self.communicationManager.start)
+        communicationManager_thread.setDaemon(0)
+        communicationManager_thread.start()
 
         self.fuzzManager.start()
 
