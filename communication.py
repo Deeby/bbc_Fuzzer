@@ -36,7 +36,7 @@ class CommunicationManager:
     
     def alert(self, alert_text):
         self.text = alert_text
-        send_message_()
+        self.send_message_()
 
     def send_message_(self):
         self.manager.send_message(self.chat_id, self.text)

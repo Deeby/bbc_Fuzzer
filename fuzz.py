@@ -13,6 +13,7 @@ import os
 import time
 import base64
 import subprocess
+import sys
 
 
 class FuzzManager:
@@ -31,12 +32,15 @@ class FuzzManager:
         self.loop = self.databaseManager.get_loop()
         self.test_number = self.databaseManager.get_test_number()
         self.mutate_mode = self.databaseManager.get_mutate_mode() # windows binary or docker container
-
+        self.stop = False
+        
         self.pid = None
         self.debug = None
         self.event = None
         self.debug_time = 0
-
+        self.system_bit = self.databaseManager.get_system_bit()
+        
+        
         require_directorys = [self.seed_path, self.mutate_path, self.crash_path]
         for directory in require_directorys:
             if not os.path.exists(directory):
@@ -45,19 +49,18 @@ class FuzzManager:
     def _check_count(func): 
 	@wraps(func)
 	def wrapper(self, *args, **kwargs):
-	    if self.test_number > self.loop:
-		print "Completed Fuzzing Test"
-                shutil.copy('fuzzHistory.db', self.crash_path)  
-		exit()
-			
+            print self.test_number
+            print self.loop
+	    if self.test_number == self.loop:
+                self.stop = True
 	    return func(self, *args, **kwargs) 
 	return wrapper
 
     def mutate(self):
         if self.mutate_mode == "binary":
-           subprocess.call("bin/radamsa.exe -r seed -n {} -o testcase/%n.{}".format(self.loop, self.file_type))
+           subprocess.call("bin\\{}\\radamsa.exe -r seed -n {} -o testcase\\%n.{}".format(self.system_bit, self.loop, self.file_type))
 	elif self.mutate_mode == "docker":
-	    print "docker run -d -v []:/testcase,[]:/seed --name=radamsa bongbongco88/radamsa"
+	    print "docker run -d -v []:\\testcase,[]:\\seed --name=radamsa bongbongco88\\radamsa"
     
     @_check_count				
     def execute(self):
@@ -118,7 +121,11 @@ class FuzzManager:
 
     def kill_test_process(self):
         self.event.get_process().kill()
-
+        
+    def complete_test(self):
+        shutil.copy('fuzzHistory.db', ".\\{}\\".format(self.crash_path))  
+        self.communicationManager.alert("Completed Fuzzing Test")
+        
     def add_test_number(self):
         self.test_number = self.test_number + 1
         if self.test_number % 100 == 0:
@@ -131,8 +138,11 @@ class FuzzManager:
     def monitor(self):
         _killer = Debug()
         while True:
-            if int(time.time()) - int(self.debug_time) > 15:
+            if int(time.time()) - int(self.debug_time) > 10:
                 try:
+                    for (process, name) in _killer.system.find_processes_by_filename(os.path.split(self.target_path)[1]):
+                        if not process:
+                            sleep(5)
                     self.kill_test_process()
                 except (WindowsError, AttributeError):
                     sleep(5)
@@ -149,6 +159,9 @@ class FuzzManager:
 	mutate_thread.setDaemon(0)
 	mutate_thread.start()
 	while True:
+            if self.stop:
+                self.complete_test()
+                return 1
             monitor_thread = threading.Thread(target=self.monitor)
             monitor_thread.setDaemon(0)
             monitor_thread.start()

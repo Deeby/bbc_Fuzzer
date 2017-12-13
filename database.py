@@ -25,7 +25,7 @@ class DatabaseManager:
         self.execute(sql, "set")
 
     def set_setting(self):
-        sql = "insert into setting (file_type, seed_path, seed_file, mutate_path, crash_path, target_path, loop, test_number, mutate_mode) values ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')".format("aiff", "seed", "seed", "testcase", "crash", "C:\\Program Files (x86)\\GRETECH\\GOMAudio\\Goma.exe", 1000, 1, "binary")
+        sql = "insert into setting (file_type, seed_path, seed_file, mutate_path, crash_path, target_path, loop, test_number, mutate_mode, system_bit) values ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')".format("mp4", "seed", "seed", "testcase", "crash", "C:\\Program Files\\MPC-HC\\mpc-hc.exe", 3, 1, "binary", "32")
         self.execute(sql, "set")
 
     def _connect_fuzz_history(func): 
@@ -84,6 +84,7 @@ class DatabaseManager:
             loop integer NOT NULL,
             test_number integer NOT NULL,
             mutate_mode text NOT NULL,
+            system_bit text NOT NULL,
             Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         );"""
         tables = [sql_communication, sql_fuzz, sql_master, sql_setting]
@@ -178,6 +179,13 @@ class DatabaseManager:
 
     def get_mutate_mode(self):
         sql = "select mutate_mode from setting"
+        return self.execute(sql, "get")[0][0]
+
+    def set_system_bit(self, system_bit):
+        sql = "update setting set system_bit='{}'".format(system_bit)
+        return self.execute(sql, "set")
+    def get_system_bit(self):
+        sql = "select system_bit from setting"
         return self.execute(sql, "get")[0][0]
 
     @_connect_fuzz_history 
