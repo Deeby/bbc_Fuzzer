@@ -21,7 +21,7 @@ class DatabaseManager:
             self.set_setting()
 
     def set_master(self):
-        sql = "insert into master (master_code, master_chat_id, api_code) values ('{}', '{}', '{}')".format(sha224("bongbongco2017!").hexdigest(), "149071544", "471865501:AAGDehatYeS-FUTs1eOnLV8D3SwvCrt8VSA")
+        sql = "insert into master (master_code, master_chat_id, api_code) values ('{}', '{}', '{}')".format(sha224("password").hexdigest(), "chat_id", "api_code")
         self.execute(sql, "set")
 
     def set_setting(self):
