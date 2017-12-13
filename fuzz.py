@@ -55,18 +55,19 @@ class FuzzManager:
 
     def mutate(self):
         if self.mutate_mode == "binary":
-            subprocess.call("bin/radamsa.exe -r seed -n {} -o testcase/%n".format(self.loop))
+            subprocess.call("bin/radamsa.exe -r seed -n {} -o testcase/%n.{}".format(self.loop, self.file_type))
 	elif self.mutate_mode == "docker":
 	    print "docker run -d -v []:/testcase,[]:/seed --name=radamsa bongbongco88/radamsa"
     
     @_check_count				
     def execute(self):
         print "# {} Opening mutate file to target by bbcFuzzer".format(self.test_number)
-        print(["{}".format(self.target_path), "{}\\{}".format(self.mutate_path, self.test_number)])
+            subprocess.call("bin/radamsa.exe -r seed -n {} -o testcase/%n.{}".format(self.loop, self.file_type))
+        print(["{}".format(self.target_path), "{}\\{}.{}".format(self.mutate_path, self.test_number, self.file_type)])
         try:
             with Debug(self.check_crash, bKillOnExit = True) as _debug:
                 self.debug_time = time.time()
-                _debug.execv(["{}".format(self.target_path), "{}\\{}".format(self.mutate_path, self.test_number)])
+                _debug.execv(["{}".format(self.target_path), "{}\\{}.{}".format(self.mutate_path, self.test_number, self.file_type)])
                 _debug.loop()
         except WindowsError:
             self.communicationManager.alert("Failed execute")
@@ -103,10 +104,10 @@ class FuzzManager:
         self.kill_test_process()
 
     def save_report(self, crash_type, report):
-        mutate_descriptor = open("{}/{}".format(self.mutate_path, self.test_number), 'r')
+        mutate_descriptor = open("{}/{}.{}".format(self.mutate_path, self.test_number, self.file_type), 'r')
         mutate_content = mutate_descriptor.read()
 
-        seed_descriptor = open("{}/{}".format(self.seed_path, self.seed_file), 'r')
+        seed_descriptor = open("{}/{}.{}".format(self.seed_path, self.seed_file, self.file_type), 'r')
         seed_content = seed_descriptor.read()
         
         crash_information = (self.target_path, crash_type, self.file_type, report, base64.encodestring(mutate_content), base64.encodestring(seed_content)) 
@@ -114,7 +115,7 @@ class FuzzManager:
 
     def copy_case(self):
 	os.mkdir("./{}/{}".format(self.crash_path, self.work_summary))
-	shutil.copyfile("{}/{}".format(self.mutate_path, self.test_number), "{}/{}/{}".format(self.crash_path, self.work_summary, self.test_number))
+	shutil.copyfile("{}/{}.{}".format(self.mutate_path, self.test_number, self.file_type), "{}/{}/{}.{}".format(self.crash_path, self.work_summary, self.test_number, self.file_type))
 
     def kill_test_process(self):
         self.event.get_process().kill()
@@ -126,7 +127,7 @@ class FuzzManager:
             for complete_test_file in range(self.test_number - 100, self.test_number):
 		if complete_test_file == 0:
                     continue
-                os.remove("./{}/{}".format(self.mutate_path, complete_test_file))
+                os.remove("./{}/{}.{}".format(self.mutate_path, complete_test_file, self.file_type))
 
     def monitor(self):
         _killer = Debug()
