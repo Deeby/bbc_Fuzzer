@@ -124,6 +124,8 @@ class FuzzManager:
         if self.test_number % 100 == 0:
             self.databaseManager.set_test_number(self.test_number)
             for complete_test_file in range(self.test_number - 100, self.test_number):
+		if complete_test_file == 0:
+                    continue
                 os.remove("./{}/{}".format(self.mutate_path, complete_test_file))
 
     def monitor(self):
