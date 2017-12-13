@@ -35,31 +35,44 @@ class FuzzManager:
         self.pid = None
         self.debug = None
         self.event = None
-        
+        self.debug_time = 0
+
         require_directorys = [self.seed_path, self.mutate_path, self.crash_path]
         for directory in require_directorys:
             if not os.path.exists(directory):
                 os.makedirs(directory)
+
+    def _check_count(func): 
+	@wraps(func)
+	def wrapper(self, *args, **kwargs):
+	    if self.test_number > self.loop:
+		print "Completed Fuzzing Test"
+                shutil.copy('fuzzHistory.db', self.crash_path)  
+		exit()
+			
+	    return func(self, *args, **kwargs) 
+	return wrapper
 
     def mutate(self):
         if self.mutate_mode == "binary":
             subprocess.call("bin/radamsa.exe -r seed -n {} -o testcase/%n".format(self.loop))
 	elif self.mutate_mode == "docker":
 	    print "docker run -d -v []:/testcase,[]:/seed --name=radamsa bongbongco88/radamsa"
-				
+    
+    @_check_count				
     def execute(self):
         print "# {} Opening mutate file to target by bbcFuzzer".format(self.test_number)
         print(["{}".format(self.target_path), "{}\\{}".format(self.mutate_path, self.test_number)])
         try:
-            _debug = Debug(self.check_crash, bKillOnExit = True)
-            _debug.execv(["{}".format(self.target_path), "{}\\{}".format(self.mutate_path, self.test_number)])
-            _debug.loop()
+            with Debug(self.check_crash, bKillOnExit = True) as _debug:
+                self.debug_time = time.time()
+                _debug.execv(["{}".format(self.target_path), "{}\\{}".format(self.mutate_path, self.test_number)])
+                _debug.loop()
         except WindowsError:
             self.communicationManager.alert("Failed execute")
             print "Failed execute"
         finally:
             self.add_test_number()
-            _debug.stop()
 
     def check_crash(self, event):
 	code = event.get_event_code()
@@ -67,7 +80,7 @@ class FuzzManager:
 
 	if code == win32.EXCEPTION_DEBUG_EVENT and event.is_last_chance():
 	    self.dump() 
-	
+        
     def dump(self):
 	crash = Crash(self.event)
 	crash.fetch_extra_data(self.event)
@@ -87,7 +100,7 @@ class FuzzManager:
         print "Exception Occurred"
         self.communicationManager.alert("Exception Occurred")
         self.communicationManager.alert(report)
-        self.event.get_process().kill()
+        self.kill_test_process()
 
     def save_report(self, crash_type, report):
         mutate_descriptor = open("{}/{}".format(self.mutate_path, self.test_number), 'r')
@@ -103,23 +116,8 @@ class FuzzManager:
 	os.mkdir("./{}/{}".format(self.crash_path, self.work_summary))
 	shutil.copyfile("{}/{}".format(self.mutate_path, self.test_number), "{}/{}/{}".format(self.crash_path, self.work_summary, self.test_number))
 
-    def _check_count(func): 
-	@wraps(func)
-	def wrapper(self, *args, **kwargs):
-	    if self.test_number > self.loop:
-		print "Completed Fuzzing Test"
-                shutil.copy('fuzzHistory.db', self.crash_path)  
-		exit()
-			
-	    return func(self, *args, **kwargs) 
-	return wrapper
-
-    @_check_count
-    def fuzz(self):
-	fuzz_thread = threading.Thread(target=self.execute)	
-	fuzz_thread.setDaemon(0)
-	fuzz_thread.start()
-        sleep(5)
+    def kill_test_process(self):
+        self.event.get_process().kill()
 
     def add_test_number(self):
         self.test_number = self.test_number + 1
@@ -128,14 +126,28 @@ class FuzzManager:
             for complete_test_file in range(self.test_number - 100, self.test_number):
                 os.remove("./{}/{}".format(self.mutate_path, complete_test_file))
 
+    def monitor(self):
+        _killer = Debug()
+        while True:
+            if int(time.time()) - int(self.debug_time) > 15:
+                try:
+                    self.kill_test_process()
+                except (WindowsError, AttributeError):
+                    sleep(5)
+                    self.kill_test_process()
+                #for (process, name) in _killer.system.find_processes_by_filename(os.path.split(self.target_path)[1]):
+                #    _killer.kill(process.get_pid())
+                #    print "Kill {} {}".format(process.get_pid(), name)
+                
+                break
+
     def start(self):
-	mutate_thread = threading.Thread(target=self.mutate)
+	#self.mutate()
+        mutate_thread = threading.Thread(target=self.mutate)
 	mutate_thread.setDaemon(0)
 	mutate_thread.start()
 	while True:
-	    self.fuzz()
-
-
-if __name__=="__main__":
-    fuzzManager = FuzzManager()
-    fuzzManager.start()
+            monitor_thread = threading.Thread(target=self.monitor)
+            monitor_thread.setDaemon(0)
+            monitor_thread.start()
+            self.execute()

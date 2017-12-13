@@ -21,12 +21,12 @@ class DatabaseManager:
             self.set_setting()
 
     def set_master(self):
-        sql = "insert into master (master_code, master_chat_id, api_code) values ('{}', '{}', '{}')".format(sha224("password").hexdigest(), "chat_id", "api_code")
+        sql = "insert into master (master_code, master_chat_id, api_code) values ('{}', '{}', '{}')".format(sha224("bongbongco2017!").hexdigest(), "149071544", "471865501:AAGDehatYeS-FUTs1eOnLV8D3SwvCrt8VSA")
         self.execute(sql, "set")
 
     def set_setting(self):
         sql = "insert into setting (file_type, seed_path, seed_file, mutate_path, crash_path, target_path, loop, test_number, mutate_mode) values ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')".format("aiff", "seed", "seed", "testcase", "crash", "C:\\Program Files (x86)\\GRETECH\\GOMAudio\\Goma.exe", 1000, 1, "binary")
-        self.execute(sql, "set")
+self.execute(sql, "set")
 
     def _connect_fuzz_history(func): 
         @wraps(func)
