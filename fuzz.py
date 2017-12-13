@@ -55,14 +55,13 @@ class FuzzManager:
 
     def mutate(self):
         if self.mutate_mode == "binary":
-            subprocess.call("bin/radamsa.exe -r seed -n {} -o testcase/%n.{}".format(self.loop, self.file_type))
+           subprocess.call("bin/radamsa.exe -r seed -n {} -o testcase/%n.{}".format(self.loop, self.file_type))
 	elif self.mutate_mode == "docker":
 	    print "docker run -d -v []:/testcase,[]:/seed --name=radamsa bongbongco88/radamsa"
     
     @_check_count				
     def execute(self):
         print "# {} Opening mutate file to target by bbcFuzzer".format(self.test_number)
-            subprocess.call("bin/radamsa.exe -r seed -n {} -o testcase/%n.{}".format(self.loop, self.file_type))
         print(["{}".format(self.target_path), "{}\\{}.{}".format(self.mutate_path, self.test_number, self.file_type)])
         try:
             with Debug(self.check_crash, bKillOnExit = True) as _debug:
