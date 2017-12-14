@@ -154,10 +154,10 @@ class FuzzManager:
                 break
 
     def start(self):
-	#self.mutate()
-        mutate_thread = threading.Thread(target=self.mutate)
-	mutate_thread.setDaemon(0)
-	mutate_thread.start()
+	self.mutate()
+        #mutate_thread = threading.Thread(target=self.mutate)
+	#mutate_thread.setDaemon(0)
+	#mutate_thread.start()
 	while True:
             if self.stop:
                 self.complete_test()
